@@ -1,0 +1,43 @@
+{
+  "folders": [
+        {
+            "path": "/opt/ros/kinetic/share/urdf_tutorial"
+        },
+        {
+            "path": "/opt/ros/kinetic/share/urdf_sim_tutorial"
+        },
+        {
+            "path": "/home/zwhy2022/urdf"
+        },
+        {
+            "path": "/opt/ros/kinetic/lib/python2.7/dist-packages/joint_state_publisher"
+        },
+        {
+            "path": "/opt/ros/kinetic/lib/python2.7/dist-packages/joint_state_publisher_gui"
+        },
+        {
+            "path": ""
+        },
+	    {
+            "path": ""
+        },
+        {
+            "path": ""
+        },
+        {
+            "path": ""
+        },
+        {
+            "path": ""
+        },
+        {
+            "path": ""
+        },
+        {
+            "path": ""
+        },
+        {
+            "path": ""
+        }
+  ]
+}
