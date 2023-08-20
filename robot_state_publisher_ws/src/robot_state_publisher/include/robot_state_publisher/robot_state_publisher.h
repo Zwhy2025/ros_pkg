@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Author: Wim Meeussen */
+/* 作者：Wim Meeussen */
 
 #ifndef ROBOT_STATE_PUBLISHER_H
 #define ROBOT_STATE_PUBLISHER_H
@@ -49,44 +49,47 @@
 
 namespace robot_state_publisher {
 
-class SegmentPair
-{
-public:
-  SegmentPair(const KDL::Segment& p_segment, const std::string& p_root, const std::string& p_tip):
-    segment(p_segment), root(p_root), tip(p_tip){}
+// 表示一对段的类
+    class SegmentPair
+    {
+    public:
+        // 构造函数
+        SegmentPair(const KDL::Segment& p_segment, const std::string& p_root, const std::string& p_tip):
+                segment(p_segment), root(p_root), tip(p_tip){}
 
-  KDL::Segment segment;
-  std::string root, tip;
-};
+        KDL::Segment segment;  // 段
+        std::string root, tip; // 根和尖端的名称
+    };
 
+// 机器人状态发布器类
+    class RobotStatePublisher
+    {
+    public:
+        // 构造函数
+        // \param tree 机器人的运动模型，由 KDL Tree 表示
+        RobotStatePublisher(const KDL::Tree& tree, const urdf::Model& model = urdf::Model());
 
-class RobotStatePublisher
-{
-public:
-  /** Constructor
-   * \param tree The kinematic model of a robot, represented by a KDL Tree
-   */
-  RobotStatePublisher(const KDL::Tree& tree, const urdf::Model& model = urdf::Model());
+        // 析构函数
+        ~RobotStatePublisher(){};
 
-  /// Destructor
-  ~RobotStatePublisher(){};
+        // 发布转换到 tf
+        // \param joint_positions 关节名称和关节位置的映射
+        // \param time 记录关节位置的时间
+        virtual void publishTransforms(const std::map<std::string, double>& joint_positions, const ros::Time& time, const std::string& tf_prefix);
 
-  /** Publish transforms to tf
-   * \param joint_positions A map of joint names and joint positions.
-   * \param time The time at which the joint positions were recorded
-   */
-  virtual void publishTransforms(const std::map<std::string, double>& joint_positions, const ros::Time& time, const std::string& tf_prefix);
-  virtual void publishFixedTransforms(const std::string& tf_prefix, bool use_tf_static = false);
+        virtual void publishFixedTransforms(const std::string& tf_prefix, bool use_tf_static = false);
 
-protected:
-  virtual void addChildren(const KDL::SegmentMap::const_iterator segment);
+    protected:
+        // 添加子段
+        virtual void addChildren(const KDL::SegmentMap::const_iterator segment);
 
-  std::map<std::string, SegmentPair> segments_, segments_fixed_;
-  const urdf::Model& model_;
-  tf2_ros::TransformBroadcaster tf_broadcaster_;
-  tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
-};
+        std::map<std::string, SegmentPair> segments_, segments_fixed_; // 段的映射
+        const urdf::Model& model_;                                     // URDF 模型
+        tf2_ros::TransformBroadcaster tf_broadcaster_;                 // tf 广播器
+        tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;    // 静态 tf 广播器
+    };
 
 }
 
 #endif
+

@@ -13,16 +13,20 @@ using namespace robot_state_publisher;
 
 JointStateListener::JointStateListener(const KDL::Tree &tree, const MimicMap &m, const urdf::Model &model)
         : state_publisher_(tree, model), mimic_(m) {
+    //当您创建一个带有 "~" 参数的 NodeHandle 时，例如 ros::NodeHandle n_tilde("~");，
+    // 您正在创建一个私有的节点句柄。这个私有节点句柄只能访问与当前节点关联的命名空间中的参数
     ros::NodeHandle n_tilde("~");
     ros::NodeHandle n;
-
     // 设置发布频率
     double publish_freq;
     n_tilde.param("publish_frequency", publish_freq, 50.0);
     // 设置是否使用 /tf_static 拉取静态转换广播器
+
     n_tilde.param("use_tf_static", use_tf_static_, true);
+
     // ignore_timestamp_ == true, 接受关节状态消息，无论其时间戳
     n_tilde.param("ignore_timestamp", ignore_timestamp_, false);
+
     // 从最近的命名空间获取 tf_prefix 参数
     std::string tf_prefix_key;
     n_tilde.searchParam("tf_prefix", tf_prefix_key);
@@ -118,7 +122,7 @@ void JointStateListener::callbackJointState(const JointStateConstPtr &state) {
 
 // ----------------------------------
 // ----- 主函数 ---------------------
-// ----------------------------------
+// ----------------------------------00
 int main(int argc, char **argv) {
     // 初始化ros
     ros::init(argc, argv, "robot_state_publisher");

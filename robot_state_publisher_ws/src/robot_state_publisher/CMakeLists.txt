@@ -4,7 +4,9 @@ cmake_minimum_required(VERSION 2.8)
 project(robot_state_publisher)
 
 # 设置 C++ 编译标志
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+set(CMAKE_BUILD_TYPE Debug)
 
 # 查找必要的依赖包
 find_package(orocos_kdl REQUIRED)
@@ -30,19 +32,39 @@ link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 message("--------------------------------urdfdom_headers_INCLUDE_DIRS: " ${urdfdom_headers_INCLUDE_DIRS})
 
-# 添加库
-add_library(${PROJECT_NAME}_solver src/robot_state_publisher.cpp)
-target_link_libraries(${PROJECT_NAME}_solver ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES})
 
-add_library(joint_state_listener src/joint_state_listener.cpp)
-target_link_libraries(joint_state_listener ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
+set(usingLib FALSE)
+if (usingLib)
+  add_library(${PROJECT_NAME}_solver src/robot_state_publisher.cpp)
+  target_compile_options(${PROJECT_NAME}_solver PRIVATE -g)
+  target_link_libraries(${PROJECT_NAME}_solver ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES})
 
-add_executable(${PROJECT_NAME} src/joint_state_listener.cpp)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
+  add_library(joint_state_listener src/joint_state_listener.cpp)
+  target_link_libraries(joint_state_listener ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
 
-# 编译同一个可执行文件，但使用旧的名称
-add_executable(state_publisher src/joint_state_listener.cpp)
-target_link_libraries(state_publisher ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
+  add_executable(${PROJECT_NAME} src/joint_state_listener.cpp)
+  target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
+
+  # 编译同一个可执行文件，但使用旧的名称
+  add_executable(state_publisher src/joint_state_listener.cpp)
+  target_link_libraries(state_publisher ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
+else ()
+  # 添加可执行文件
+  add_executable(${PROJECT_NAME}
+          src/robot_state_publisher.cpp  # 将 robot_state_publisher.cpp 直接添加到可执行文件
+          src/joint_state_listener.cpp
+  )
+
+  # 添加链接库
+  target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES})
+
+  # 编译同一个可执行文件，但使用旧的名称
+  add_executable(state_publisher src/joint_state_listener.cpp)
+  target_link_libraries(state_publisher ${PROJECT_NAME}_solver ${orocos_kdl_LIBRARIES})
+endif()
+
+
+
 
 # 测试
 if (CATKIN_ENABLE_TESTING)
@@ -77,11 +99,21 @@ if (CATKIN_ENABLE_TESTING)
   install(FILES test/one_link.urdf test/pr2.urdf test/two_links_fixed_joint.urdf test/two_links_moving_joint.urdf DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test)
 endif()
 
+
+
 # 安装目标
-install(TARGETS ${PROJECT_NAME}_solver joint_state_listener ${PROJECT_NAME} state_publisher
-        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+if(usingLib)
+  install(TARGETS ${PROJECT_NAME}_solver joint_state_listener ${PROJECT_NAME} state_publisher
+          ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+          LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+          RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+else ()
+  install(TARGETS  ${PROJECT_NAME} state_publisher
+          ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+          LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+          RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+endif ()
 
 # 安装头文件目录
 install(DIRECTORY include/${PROJECT_NAME}/
