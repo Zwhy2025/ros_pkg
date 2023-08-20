@@ -141,7 +141,27 @@ int main(int argc, char **argv) {
     if (!model.initParam("robot_description"))
         return -1;
 
+    ROS_INFO("model.name_= %s", model.name_.c_str());
+    ROS_INFO("model.joints_.size() = %d", model.joints_.size());
+    ROS_INFO("model.links_.size() = %d", model.links_.size());
+
+    /** model.joints_ 是所有关节的map容器。key是关节名，values 是 抽象的关节结构体 */
+    auto it = model.joints_.begin();
+    for(; it != model.joints_.end(); it++){
+        ROS_INFO("joint.name = %s", it->first.c_str());
+        ROS_INFO("joint.type = %s", it->second->name.c_str());
+    }
+
+    /**  model.links_ 是所有链接的map容器。key是链接名，values 是 抽象的链接结构体 */
+    auto its = model.links_.begin();
+    for(; its != model.links_.end(); its++){
+        ROS_INFO("link.name = %s", its->first.c_str());
+        ROS_INFO("link.type = %s", its->second->name.c_str());
+    }
+
+    // (KDL) Kinematics and Dynamics Library  运动学和动力学库
     KDL::Tree tree;
+    /**  源码里面创了一个根节点 */
     if (!kdl_parser::treeFromUrdfModel(model, tree)) {
         ROS_ERROR("Failed to extract kdl tree from XML robot description");
         return -1;

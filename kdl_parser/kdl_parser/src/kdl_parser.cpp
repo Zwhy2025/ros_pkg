@@ -137,37 +137,38 @@ KDL::RigidBodyInertia toKdl(urdf::InertialSharedPtr i)
   return KDL::RigidBodyInertia(kdl_mass, kdl_com, kdl_inertia_wrt_com);
 }
 
+// 递归函数，用于将 URDF 链接结构转换为 KDL 树
+    bool addChildrenToTree(urdf::LinkConstSharedPtr root, KDL::Tree & tree) {
+        // 获取当前链接的子链接
+        std::vector<urdf::LinkSharedPtr> children = root->child_links;
+        // 打印调试信息，显示当前链接的名称和子链接的数量
+        ROS_DEBUG("Link %s had %zu children", root->name.c_str(), children.size());
 
-// recursive function to walk through tree
-bool addChildrenToTree(urdf::LinkConstSharedPtr root, KDL::Tree & tree)
-{
-  std::vector<urdf::LinkSharedPtr> children = root->child_links;
-  ROS_DEBUG("Link %s had %zu children", root->name.c_str(), children.size());
+        // 构造惯性对象，如果链接具有惯性信息，则转换为 KDL 格式
+        KDL::RigidBodyInertia inert(0);
+        if (root->inertial) {
+            inert = toKdl(root->inertial);
+        }
 
-  // constructs the optional inertia
-  KDL::RigidBodyInertia inert(0);
-  if (root->inertial) {
-    inert = toKdl(root->inertial);
-  }
+        // 将 URDF 关节转换为 KDL 关节
+        KDL::Joint jnt = toKdl(root->parent_joint);
 
-  // constructs the kdl joint
-  KDL::Joint jnt = toKdl(root->parent_joint);
+        // 构造 KDL 段，包括链接名称、关节、原点到关节的转换和惯性
+        KDL::Segment sgm(root->name, jnt, toKdl(
+                root->parent_joint->parent_to_joint_origin_transform), inert);
 
-  // construct the kdl segment
-  KDL::Segment sgm(root->name, jnt, toKdl(
-      root->parent_joint->parent_to_joint_origin_transform), inert);
+        // 将构造的段添加到 KDL 树中
+        tree.addSegment(sgm, root->parent_joint->parent_link_name);
 
-  // add segment to tree
-  tree.addSegment(sgm, root->parent_joint->parent_link_name);
-
-  // recurslively add all children
-  for (size_t i = 0; i < children.size(); i++) {
-    if (!addChildrenToTree(children[i], tree)) {
-      return false;
+        // 递归添加所有子链接到 KDL 树中
+        for (size_t i = 0; i < children.size(); i++) {
+            if (!addChildrenToTree(children[i], tree)) {
+                return false; // 如果添加子链接失败，则返回 false
+            }
+        }
+        return true; // 所有子链接成功添加，返回 true
     }
-  }
-  return true;
-}
+
 
 bool treeFromFile(const std::string & file, KDL::Tree & tree)
 {
@@ -242,7 +243,7 @@ bool treeFromUrdfModel(const urdf::ModelInterface & robot_model, KDL::Tree & tre
       "dummy link to your URDF.", robot_model.getRoot()->name.c_str());
   }
 
-  //  add all children
+  //  遍历所有子链接 links
   for (size_t i = 0; i < robot_model.getRoot()->child_links.size(); i++) {
     if (!addChildrenToTree(robot_model.getRoot()->child_links[i], tree)) {
       return false;
