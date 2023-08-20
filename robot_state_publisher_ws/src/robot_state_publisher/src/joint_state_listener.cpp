@@ -49,6 +49,7 @@ void JointStateListener::callbackFixedJoint(const ros::TimerEvent &e) {
     state_publisher_.publishFixedTransforms(tf_prefix_, use_tf_static_);
 }
 
+
 // 关节状态的回调函数
 void JointStateListener::callbackJointState(const JointStateConstPtr &state) {
     if (state->name.size() != state->position.size()) {
@@ -125,12 +126,13 @@ int main(int argc, char **argv) {
 
     ///////////////////////////////////////// 开始弃用警告
     std::string exe_name = argv[0];
+    /** 注意C++中argc 和argv 有默认参数 传进来可执行程序的路径 */
     std::size_t slash = exe_name.find_last_of("/");
     if (slash != std::string::npos) {
         exe_name = exe_name.substr(slash + 1);
     }
     if (exe_name == "state_publisher") {
-        ROS_WARN("已弃用 'state_publisher' 可执行文件。请改用 'robot_state_publisher'");
+        ROS_WARN(" 'give up 'state_publisher' . using 'robot_state_publisher'");
     }
     ///////////////////////////////////////// 结束弃用警告
 
@@ -141,7 +143,7 @@ int main(int argc, char **argv) {
 
     KDL::Tree tree;
     if (!kdl_parser::treeFromUrdfModel(model, tree)) {
-        ROS_ERROR("从xml机器人描述中提取kdl树失败");
+        ROS_ERROR("Failed to extract kdl tree from XML robot description");
         return -1;
     }
 
